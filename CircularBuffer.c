@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stddef.h>
+#include <stdlib.h>
 
 struct CircularBuffer
 {
@@ -7,7 +8,7 @@ struct CircularBuffer
     size_t capacity;
     int *Head;
     int *Tail;
-    int size;
+    size_t size;
 
 };
 
@@ -16,49 +17,56 @@ int cb_init(struct CircularBuffer *cb, size_t capacity)
     cb->capacity=capacity;
     cb->ptr = (int *)malloc(sizeof(int) * capacity);
     cb->Tail = cb->ptr;
-    for(int i=0;i<capacity;i++)
-    {
-       cb->ptr[i]=0;
-    }
     cb->Head = cb->ptr;
     cb->size = 0;
+    return 0;
 }
 
 
 int cb_push(struct CircularBuffer *cb, int value)
 {
-    if(cb->size<cb->capacity)
+    if(cb->size == cb->capacity)
     {
-        *cb->Head = value;
-        cb->Head++;
-        cb->size++;
+        printf("Buffer Full\n");
+        return -1;
     }
-    else
+
+    *cb->Head = value;
+    cb->Head++;
+    
+    if( cb->Head == cb->ptr + cb->capacity)
     {
-        printf("Circular Buffer Full... Cannot push element\n");
+        cb->Head = cb->ptr;
     }
+
+    cb->size ++;
+    return 0;
 }
 
 int cb_pop(struct CircularBuffer *cb, int *value)
 {
-    if(cb->size != 0)
+    if( cb->size == 0)
     {
-        value = *cb->Tail;
-        *cb->Tail=0;
-        cb->Tail++;
-        cb->size--;
+        printf("Buffer Empty\n");
+        return -1;
     }
-    else
+
+    *value = *cb->Tail;
+    cb->Tail ++;
+
+    if ( cb->Tail == cb->ptr + cb->capacity)
     {
-        printf("Circular Buffer empty.... Cannot remove element\n");
+        cb->Tail = cb->ptr;
     }
+
+    cb->size--;
+    
+    return 0;
 }
 
 void cb_free(struct CircularBuffer *cb)
 {
-
-        free(cb->ptr);
-
+    free(cb->ptr);
 }
 
 void cb_print(struct CircularBuffer *cb)
@@ -76,17 +84,28 @@ int main()
     struct CircularBuffer Cb;
     cb_init(&Cb,5);
     cb_print(&Cb);
+    printf("----------------\n");
     cb_push(&Cb,10);
     cb_print(&Cb);
+    printf("----------------\n");
     cb_push(&Cb,15);
     cb_push(&Cb,16);
     cb_push(&Cb,17);
     cb_push(&Cb,18);
     cb_push(&Cb,19);
     cb_print(&Cb);
-    cb_pop(&Cb,element);
+    printf("----------------\n");
+    cb_pop(&Cb,&element);
+    printf("element is %d\n",element);
     cb_print(&Cb);
-    cb_pop(&Cb,element);
+    printf("----------------\n");
+    cb_pop(&Cb,&element);
+    printf("element is %d\n",element);
+    cb_push(&Cb,19);
+    cb_print(&Cb);
+    printf("----------------\n");
+    cb_push(&Cb,18);
+    cb_push(&Cb,19);
     cb_print(&Cb);
     cb_free(&Cb);
 
